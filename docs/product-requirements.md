@@ -223,3 +223,137 @@ The system should provide real-time updates for important ticket events such as:
 - Ticket assignment
 - Ticket status changes
 - New comments
+
+
+
+## 8. Role and Permission Model
+
+ResolveAI will initially support two roles: Admin and Agent.
+
+### Admin
+
+The Admin manages the support system and has access to administrative and ticket management operations.
+
+Permissions:
+- Manage agents
+- View all tickets
+- Create tickets
+- View ticket details
+- Assign tickets
+- Change ticket priority
+- Change ticket status
+- Add comments
+- Resolve tickets
+- View ticket history
+- Access the dashboard
+
+### Agent
+
+The Agent is responsible for handling tickets assigned to them.
+
+Permissions:
+- View assigned tickets
+- Create tickets
+- View ticket details
+- Change ticket priority
+- Change ticket status
+- Add comments
+- Resolve assigned tickets
+- View ticket history
+
+Agents cannot manage users, assign tickets, view all tickets, or access administrative controls.
+
+### Resource-Level Authorization
+
+Role-based authorization alone is not sufficient for ticket access. Agents must also be authorized based on the specific ticket they are attempting to access.
+
+An Agent can access and modify a ticket only when the ticket is assigned to that Agent.
+
+
+## 9. Multi-Tenant Data Model
+
+ResolveAI will support multiple organizations using the same application.
+
+Each organization will have its own users and tickets. Data belonging to one organization must not be accessible to users belonging to another organization.
+
+The initial implementation will use a shared MongoDB database with logical tenant isolation.
+
+### Organization Structure
+
+Organization
+- Users
+- Tickets
+
+Users and tickets will contain an `organizationId` that identifies the organization they belong to.
+
+The backend will enforce organization-level authorization by ensuring that users can only access resources belonging to their organization.
+
+### Tenant Isolation Rule
+
+For organization-scoped resources:
+
+`User.organizationId` must match `Resource.organizationId`.
+
+This prevents users from accessing tickets or other resources belonging to another organization.
+
+
+## 10. User Lifecycle
+
+### Organization and Admin Creation
+
+The first user will create an organization during signup. The system will create the organization and associate the user with it using the Admin role.
+
+Flow:
+
+Signup → Create Organization → Create Admin User → Admin Dashboard
+
+### Agent Creation
+
+An Admin can create Agent accounts within their organization. Newly created Agents will automatically belong to the same organization as the Admin who created them.
+
+Agents cannot create other Admin accounts or manage users outside their organization.
+
+### Authentication Lifecycle
+
+Users will authenticate using their email and password.
+
+After successful authentication:
+1. The server verifies the user's credentials.
+2. The server generates a JWT.
+3. The JWT is stored in an HttpOnly cookie.
+4. Protected API requests use the authenticated identity to determine the user's organization and role.
+
+### Logout
+
+When a user logs out, the authentication cookie will be cleared and the user will no longer be authenticated.
+
+
+## 10. User Lifecycle
+
+### Organization and Admin Creation
+
+The first user will create an organization during signup. The system will create the organization and associate the user with it using the Admin role.
+
+Flow:
+
+Signup → Create Organization → Create Admin User → Admin Dashboard
+
+### Agent Creation
+
+An Admin can create Agent accounts within their organization. Newly created Agents will automatically belong to the same organization as the Admin who created them.
+
+Agents cannot create other Admin accounts or manage users outside their organization.
+
+### Authentication Lifecycle
+
+Users will authenticate using their email and password.
+
+After successful authentication:
+1. The server verifies the user's credentials.
+2. The server generates a JWT.
+3. The JWT is stored in an HttpOnly cookie.
+4. Protected API requests use the authenticated identity to determine the user's organization and role.
+
+### Logout
+
+When a user logs out, the authentication cookie will be cleared and the user will no longer be authenticated.
