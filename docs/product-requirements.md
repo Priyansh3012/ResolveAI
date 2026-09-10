@@ -357,3 +357,211 @@ After successful authentication:
 ### Logout
 
 When a user logs out, the authentication cookie will be cleared and the user will no longer be authenticated.
+
+
+## 11. Database Design
+
+### 11.1 Organization
+
+The Organization entity represents a company or workspace using ResolveAI.
+
+Fields:
+
+- `_id` — MongoDB generated identifier
+- `name` — Organization name
+- `createdAt` — Creation timestamp
+- `updatedAt` — Last update timestamp
+
+Each organization can have multiple users and tickets.
+
+
+### 11.2 User
+
+The User entity represents an Admin or Agent belonging to an organization.
+
+Fields:
+
+- `_id` — MongoDB generated identifier
+- `name` — User's name
+- `email` — Login email
+- `password` — Bcrypt-hashed password
+- `role` — User role (`admin` or `agent`)
+- `organizationId` — Organization the user belongs to
+- `createdAt` — Account creation timestamp
+- `updatedAt` — Last update timestamp
+
+Constraints:
+
+- Email must be unique.
+- Role must be either `admin` or `agent`.
+- Organization ID is required.
+- Password must never be stored in plain text.
+- Every user must belong to an organization.
+
+Each user belongs to exactly one organization.
+
+
+
+### 11.3 Ticket
+
+The Ticket entity represents a support issue reported within an organization.
+
+Fields:
+
+- `_id` — MongoDB generated identifier
+- `title` — Short description of the issue
+- `description` — Detailed description of the issue
+- `organizationId` — Organization that owns the ticket
+- `createdBy` — Reference to the user who created the ticket
+- `assignedTo` — Reference to the Agent assigned to the ticket; can be null when unassigned
+- `status` — Current ticket status
+- `priority` — Current ticket priority
+- `category` — Current ticket category
+- `aiAnalysis` — AI-generated recommendations and sentiment analysis
+- `aiSummary` — AI-generated summary of the ticket and its conversation
+- `createdAt` — Ticket creation timestamp
+- `updatedAt` — Last update timestamp
+
+Status values:
+
+- `open`
+- `in_progress`
+- `resolved`
+- `closed`
+
+Priority values:
+
+- `low`
+- `medium`
+- `high`
+- `critical`
+
+The `aiAnalysis` object will contain:
+
+- `recommendedPriority`
+- `predictedCategory`
+- `sentiment`
+
+AI recommendations will be stored separately from the current ticket values so that users can review and override AI recommendations.
+
+
+### 11.4 Comment
+
+The Comment entity represents a message added to a ticket by a user.
+
+Fields:
+
+- `_id` — MongoDB generated identifier
+- `ticketId` — Reference to the ticket
+- `organizationId` — Organization that owns the comment
+- `author` — Reference to the user who created the comment
+- `content` — Comment text
+- `createdAt` — Comment creation timestamp
+- `updatedAt` — Last update timestamp
+
+Comments will be stored in a separate collection rather than embedded directly inside the Ticket document.
+
+Each comment belongs to exactly one ticket and is created by a user belonging to the same organization as the ticket.
+
+
+
+### 11.5 Ticket History
+
+The TicketHistory entity records important changes and actions performed on a ticket.
+
+Fields:
+
+- `_id` — MongoDB generated identifier
+- `ticketId` — Reference to the ticket
+- `organizationId` — Organization that owns the ticket
+- `userId` — Reference to the user who performed the action
+- `action` — Type of action performed
+- `oldValue` — Previous value when applicable
+- `newValue` — New value when applicable
+- `createdAt` — Time when the action occurred
+
+Examples of actions include:
+
+- `created`
+- `assigned`
+- `status_changed`
+- `priority_changed`
+- `comment_added`
+- `updated`
+- `resolved`
+- `closed`
+
+Ticket history records are immutable and should not be modified after creation.
+
+
+
+### 11.6 Entity Relationships
+
+The relationships between the main entities are:
+
+- One Organization has many Users.
+- One Organization has many Tickets.
+- Each User belongs to exactly one Organization.
+- Each Ticket belongs to exactly one Organization.
+- One User can create many Tickets through `createdBy`.
+- One User can be assigned many Tickets through `assignedTo`.
+- A Ticket can have zero or one current assignee.
+- One Ticket has many Comments.
+- One User can create many Comments through `author`.
+- One Ticket has many TicketHistory records.
+- One User can create many TicketHistory records through `userId`.
+
+Relationship summary:
+
+Organization 1 → N User
+
+Organization 1 → N Ticket
+
+User 1 → N Ticket (createdBy)
+
+User 1 → N Ticket (assignedTo)
+
+Ticket 1 → N Comment
+
+User 1 → N Comment (author)
+
+Ticket 1 → N TicketHistory
+
+User 1 → N TicketHistory (userId)
+
+
+
+### 11.7 Database Indexes
+
+Indexes will be added based on the application's expected query patterns.
+
+#### User
+
+- Unique index on `email` for efficient login lookups and email uniqueness.
+
+#### Ticket
+
+Important ticket queries will commonly filter by organization, assignee, and status and sort by creation time.
+
+Initial indexes will include:
+
+- `organizationId`
+- `organizationId + status`
+- `organizationId + assignedTo`
+- `organizationId + createdAt`
+
+#### Comment
+
+Comments will commonly be retrieved by ticket, so an index will be created on:
+
+- `ticketId`
+
+#### TicketHistory
+
+Ticket history will commonly be retrieved by ticket in chronological order, so an index will be created on:
+
+- `ticketId + createdAt`
+
+Indexes will be reviewed and adjusted after observing actual query patterns and performance.
+
+
