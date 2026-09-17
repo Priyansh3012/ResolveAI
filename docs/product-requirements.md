@@ -328,37 +328,6 @@ After successful authentication:
 When a user logs out, the authentication cookie will be cleared and the user will no longer be authenticated.
 
 
-## 10. User Lifecycle
-
-### Organization and Admin Creation
-
-The first user will create an organization during signup. The system will create the organization and associate the user with it using the Admin role.
-
-Flow:
-
-Signup → Create Organization → Create Admin User → Admin Dashboard
-
-### Agent Creation
-
-An Admin can create Agent accounts within their organization. Newly created Agents will automatically belong to the same organization as the Admin who created them.
-
-Agents cannot create other Admin accounts or manage users outside their organization.
-
-### Authentication Lifecycle
-
-Users will authenticate using their email and password.
-
-After successful authentication:
-1. The server verifies the user's credentials.
-2. The server generates a JWT.
-3. The JWT is stored in an HttpOnly cookie.
-4. Protected API requests use the authenticated identity to determine the user's organization and role.
-
-### Logout
-
-When a user logs out, the authentication cookie will be cleared and the user will no longer be authenticated.
-
-
 ## 11. Database Design
 
 ### 11.1 Organization
@@ -565,3 +534,277 @@ Ticket history will commonly be retrieved by ticket in chronological order, so a
 Indexes will be reviewed and adjusted after observing actual query patterns and performance.
 
 
+## 12. API Design
+
+### 12.1 API Conventions
+
+The backend API will use REST-style conventions.
+
+The base API path will be:
+
+`/api`
+
+HTTP methods:
+
+- `GET` — Retrieve resources
+- `POST` — Create resources
+- `PATCH` — Partially update resources
+- `DELETE` — Delete resources
+
+Example ticket endpoints:
+
+- `GET /api/tickets`
+- `POST /api/tickets`
+- `GET /api/tickets/:id`
+- `PATCH /api/tickets/:id`
+- `DELETE /api/tickets/:id`
+
+### 12.2 Response Format
+
+Successful responses will use a consistent structure.
+
+#### Single Resource Response
+
+Example:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+
+
+## 13. API Endpoints
+
+### 13.1 Authentication APIs
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| POST | `/api/auth/signup` | Create organization and initial Admin user | Public |
+| POST | `/api/auth/login` | Authenticate user | Public |
+| POST | `/api/auth/logout` | Clear authentication session | Authenticated |
+| GET | `/api/auth/me` | Get currently authenticated user | Authenticated |
+
+#### Signup
+
+Request:
+
+```json
+{
+  "name": "Rahul",
+  "email": "rahul@example.com",
+  "password": "password123",
+  "organizationName": "ABC Support"
+}
+
+
+### 13.2 User APIs
+
+User APIs are primarily used by Admins to manage Agents within their organization.
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| GET | `/api/users` | List users in the Admin's organization | Admin |
+| POST | `/api/users` | Create an Agent | Admin |
+| GET | `/api/users/:id` | Get user details | Admin |
+| PATCH | `/api/users/:id` | Update user information | Admin |
+| DELETE | `/api/users/:id` | Delete an Agent | Admin |
+
+The `POST /api/users` endpoint will create users with the `agent` role. Admin users cannot be created through this endpoint.
+
+All user-management operations must be restricted to the authenticated Admin's organization.
+
+The backend must verify that the target user's `organizationId` matches the authenticated Admin's `organizationId` before allowing organization-scoped operations.
+
+
+### 13.3 Ticket APIs
+
+Ticket APIs provide the main support ticket management functionality.
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| GET | `/api/tickets` | List tickets | Admin / Agent |
+| POST | `/api/tickets` | Create a ticket | Admin / Agent |
+| GET | `/api/tickets/:id` | Get ticket details | Admin / assigned Agent |
+| PATCH | `/api/tickets/:id` | Update ticket information | Admin / assigned Agent |
+| DELETE | `/api/tickets/:id` | Delete a ticket | Admin |
+| PATCH | `/api/tickets/:id/assign` | Assign ticket to an Agent | Admin |
+| PATCH | `/api/tickets/:id/status` | Change ticket status | Admin / assigned Agent |
+| PATCH | `/api/tickets/:id/priority` | Change ticket priority | Admin / assigned Agent |
+
+#### List Tickets
+
+`GET /api/tickets` will support pagination and filtering.
+
+Example:
+
+`GET /api/tickets?page=1&limit=10`
+
+Filtering will support fields such as:
+
+- `status`
+- `priority`
+- `assignedTo`
+- `category`
+
+Search and sorting will also be supported.
+
+Admins can view all tickets belonging to their organization.
+
+Agents can view only tickets assigned to them.
+
+#### Create Ticket
+
+`POST /api/tickets`
+
+Example request:
+
+```json
+{
+  "title": "Payment failed",
+  "description": "My payment was deducted but my order was not placed."
+}
+
+
+### 13.4 Comment APIs
+
+Comments provide communication between users working on a ticket.
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| GET | `/api/tickets/:id/comments` | Get comments for a ticket | Admin / assigned Agent |
+| POST | `/api/tickets/:id/comments` | Add a comment to a ticket | Admin / assigned Agent |
+| PATCH | `/api/comments/:id` | Edit a comment | Comment author |
+| DELETE | `/api/comments/:id` | Delete a comment | Comment author / Admin |
+
+#### Get Comments
+
+`GET /api/tickets/:id/comments` returns comments belonging to the specified ticket.
+
+The same ticket-level authorization rules apply:
+
+- Admins can access tickets within their organization.
+- Agents can access only tickets assigned to them.
+
+#### Add Comment
+
+`POST /api/tickets/:id/comments`
+
+Example request:
+
+```json
+{
+  "content": "I have checked the payment transaction."
+}
+
+
+## 13.5 Dashboard APIs
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| GET | `/api/dashboard/summary` | Get overall ticket statistics | Admin |
+| GET | `/api/dashboard/tickets-by-status` | Get ticket counts by status | Admin |
+| GET | `/api/dashboard/tickets-by-priority` | Get ticket counts by priority | Admin |
+| GET | `/api/dashboard/trends` | Get ticket activity trends | Admin |
+
+### Dashboard API Rules
+
+Dashboard data must be scoped to the authenticated user's organization.
+
+The Admin can view aggregated statistics for all tickets belonging to their organization.
+
+Agents do not have access to administrative dashboard APIs.
+
+### Summary Response
+
+The summary endpoint may return statistics such as:
+
+- Total tickets
+- Open tickets
+- In-progress tickets
+- Resolved tickets
+- Closed tickets
+- Critical tickets
+
+### Status and Priority Statistics
+
+The status and priority endpoints return aggregated ticket counts grouped by their respective fields.
+
+### Trends
+
+The trends endpoint provides ticket activity over time for dashboard visualizations.
+
+The backend should perform aggregation using MongoDB rather than fetching all tickets into the application.
+
+Dashboard APIs are read-only and do not modify tickets or other resources.
+
+
+## 13.6 AI APIs
+
+| Method | Endpoint | Purpose | Access |
+|---|---|---|---|
+| POST | `/api/ai/analyze` | Analyze or re-analyze a ticket and generate AI recommendations | Admin / assigned Agent |
+| POST | `/api/ai/summarize` | Generate a concise summary of a ticket | Admin / assigned Agent |
+
+### AI API Rules
+
+AI APIs must follow the same organization and resource-level authorization rules as ticket APIs.
+
+Admins can use AI features for tickets within their organization.
+
+Agents can use AI features only for tickets assigned to them.
+
+Users cannot analyze or summarize tickets belonging to another organization.
+
+### Ticket Analysis
+
+The `/api/ai/analyze` endpoint analyzes or re-analyzes the ticket title and description and provides:
+
+- Predicted ticket category
+- Recommended ticket priority
+- Ticket sentiment
+
+AI recommendations are suggestions and do not automatically override the ticket's current category or priority.
+
+### Ticket Summarization
+
+The `/api/ai/summarize` endpoint generates a concise summary using the ticket description and available ticket comments.
+
+The generated summary will be stored in the ticket's `aiSummary` field.
+
+### AI Data Storage
+
+AI-generated analysis will be stored separately from the ticket's current values.
+
+The `aiAnalysis` object will contain:
+
+- `recommendedPriority`
+- `predictedCategory`
+- `sentiment`
+
+This allows users to review AI recommendations and manually override them when necessary.
+
+### AI Failure Handling
+
+AI processing must not prevent successful ticket creation or normal ticket operations.
+
+When AI analysis fails during ticket creation, the ticket will still be created successfully and the AI fields may remain unavailable until analysis is retried.
+
+If AI processing fails:
+
+1. The ticket operation should still succeed.
+2. The AI failure should be handled by the backend.
+3. Internal AI errors should not be exposed to the client.
+4. AI analysis can be retried later.
+
+### AI Service Separation
+
+AI processing will be implemented as a separate service layer within the modular monolith.
+
+The Ticket Service will handle ticket operations, while the AI Service will handle AI-specific processing.
+
+The intended flow is:
+
+Ticket Creation → Ticket Service → AI Service → Store AI Results
+
+AI failures must not cause the main ticket operation to fail.
