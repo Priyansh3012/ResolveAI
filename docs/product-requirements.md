@@ -405,6 +405,15 @@ Priority values:
 - `high`
 - `critical`
 
+Category values:
+
+- `payment`
+- `technical`
+- `account`
+- `delivery`
+- `refund`
+- `other`
+
 The `aiAnalysis` object will contain:
 
 - `recommendedPriority`
@@ -665,6 +674,11 @@ Example request:
   "description": "My payment was deducted but my order was not placed."
 }
 
+```markdown
+When an Agent creates a ticket, the ticket will automatically be assigned to that Agent.
+
+When an Admin creates a ticket, the ticket may remain unassigned until an Agent is assigned by the Admin.
+
 
 ### 13.4 Comment APIs
 
@@ -808,3 +822,154 @@ The intended flow is:
 Ticket Creation → Ticket Service → AI Service → Store AI Results
 
 AI failures must not cause the main ticket operation to fail.
+
+
+## 14. Final Architecture
+
+### 14.1 Architecture Style
+
+ResolveAI will use a modular monolith architecture.
+
+The backend will be implemented as a single Node.js and Express application while organizing functionality into separate modules.
+
+The main backend modules will include:
+
+- Authentication
+- Users
+- Tickets
+- Comments
+- Dashboard
+- AI
+
+The project will use MVC with a service layer.
+
+### 14.2 Backend Request Flow
+
+The typical request flow will be:
+
+React Client → Route → Middleware → Controller → Service → Model → MongoDB
+
+Controllers will handle HTTP requests and responses, while services will contain business logic. Models will handle database interaction.
+
+### 14.3 Supporting Services
+
+The backend will also integrate:
+
+- Redis for caching and API rate limiting
+- Socket.IO for real-time ticket updates
+- AI Service for ticket analysis and summarization
+
+### 14.4 Architecture Decision
+
+A modular monolith is selected instead of microservices because the MVP is designed to be completed within a limited development timeline.
+
+Microservices, Kafka, background workers, and other distributed architecture components are outside the MVP scope.
+
+## 14.5 Project Structure
+
+The project will use a separate frontend and backend structure within a single Git repository.
+
+```text
+ResolveAI/
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── store/
+│   │   ├── utils/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   └── package.json
+│
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── middleware/
+│   │   ├── modules/
+│   │   │   ├── auth/
+│   │   │   ├── users/
+│   │   │   ├── tickets/
+│   │   │   ├── comments/
+│   │   │   ├── dashboard/
+│   │   │   └── ai/
+│   │   ├── routes/
+│   │   ├── utils/
+│   │   ├── app.js
+│   │   └── server.js
+│   └── package.json
+│
+├── docs/
+│   └── product-requirements.md
+│
+├── .gitignore
+└── README.md
+
+## 14.6 Component Interaction and Data Flow
+
+### Normal API Request Flow
+
+The typical API request will follow this flow:
+
+React Client → HTTP Request → Express Route → Authentication Middleware → Authorization Middleware → Controller → Service → Model → MongoDB
+
+The response will follow the reverse path back to the React client.
+
+### Ticket Creation Flow
+
+When a ticket is created:
+
+React Client → Ticket API → Authentication → Authorization → Ticket Controller → Ticket Service → MongoDB
+
+After the ticket is successfully created, the Ticket Service will trigger AI analysis and store the resulting AI data when available.
+
+Ticket creation must not fail if AI processing fails.
+
+Important ticket events may also trigger Socket.IO notifications for connected clients.
+
+### Redis Interaction
+
+Redis will be used for:
+
+- Ticket data caching
+- API rate limiting
+
+For cached data, the service will check Redis before querying MongoDB when appropriate.
+
+For rate limiting, middleware will use Redis to track request activity and reject requests that exceed the configured limit.
+
+### Socket.IO Interaction
+
+Socket.IO will provide real-time updates for:
+
+- Ticket assignment
+- Ticket status changes
+- New comments
+
+MongoDB remains the source of truth for ticket data. Socket.IO is responsible only for communicating changes to connected clients.
+
+### AI Interaction
+
+AI processing will be handled by the AI Service.
+
+The general flow will be:
+
+Ticket Service → AI Service → AI Model/API → AI Result → Store AI Result in MongoDB
+
+AI-generated recommendations will be stored separately from the ticket's current values.
+
+AI failures must not cause the main ticket operation to fail.
+
+### Organization and Authorization Flow
+
+Every organization-scoped request will use the authenticated user's organization identity.
+
+The backend will verify:
+
+- The authenticated user belongs to the organization.
+- The requested resource belongs to the same organization.
+- The user's role allows the requested operation.
+- Agents can access ticket resources only when the ticket is assigned to them.
+
+This organization and resource-level authorization must be enforced on the backend.
