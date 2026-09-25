@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const authRoutes = require("./routes/authRoutes");
 const errorMiddleware = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -17,6 +18,8 @@ app.get("/", (req, res) => {
         message: "ResolveAI API is running"
     });
 });
+
+app.use("/api/auth", authRoutes);
 
 app.use(errorMiddleware);
 
