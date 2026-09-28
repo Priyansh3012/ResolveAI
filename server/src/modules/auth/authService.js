@@ -41,6 +41,36 @@ const signup = async (name, email, password, organizationName) => {
     };
 };
 
+// Login service
+const login = async (email, password) => {
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        const error = new Error("Invalid email or password");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // Compare entered password with stored hash
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+        const error = new Error("Invalid email or password");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // Generate JWT after successful authentication
+    const token = generateToken(user);
+
+    return {
+        user,
+        token
+    };
+};
+
 module.exports = {
-    signup
+    signup, 
+    login
 };
