@@ -25,6 +25,16 @@ const protect = async (req, res, next) => {
             throw error;
         }
 
+        // Verify organization context
+        if (
+            !user.organizationId ||
+            user.organizationId.toString() !== decoded.organizationId
+        ) {
+            const error = new Error("Invalid organization");
+            error.statusCode = 401;
+            throw error;
+        }
+
         // Attach authenticated user to request
         req.user = user;
 
