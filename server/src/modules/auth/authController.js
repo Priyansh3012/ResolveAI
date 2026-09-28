@@ -85,7 +85,29 @@ const login = async (req, res, next) => {
     }
 };
 
+// Logout controller
+const logout = async (req, res, next) => {
+    try {
+        // Clear the authentication cookie
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax"
+        });
+
+        // Send successful response
+        res.status(200).json({
+            success: true,
+            message: "Logout successful"
+        });
+    } catch (error) {
+        // Pass error to error middleware
+        next(error);
+    }
+};
+
 module.exports = {
     signup,
-    login
+    login,
+    logout
 };
