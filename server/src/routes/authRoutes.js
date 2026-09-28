@@ -7,15 +7,8 @@ const authorize = require("../middleware/roleMiddleware");
 
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
-router.post("/logout", authController.logout);
 
-router.get("/me", protect, (req, res) => {
-    res.status(200).json({
-        success: true,
-        user: req.user
-    });
-});
-
+router.get("/me", protect, authController.getMe);
 
 router.post("/logout", authController.logout);
 

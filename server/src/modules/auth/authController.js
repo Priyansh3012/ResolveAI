@@ -106,8 +106,29 @@ const logout = async (req, res, next) => {
     }
 };
 
+// Get currently authenticated user
+const getMe = async (req, res, next) => {
+    try {
+        // User is already attached by protect middleware
+        res.status(200).json({
+            success: true,
+            user: {
+                id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role,
+                organizationId: req.user.organizationId
+            }
+        });
+    } catch (error) {
+        // Pass error to error middleware
+        next(error);
+    }
+};
+
 module.exports = {
     signup,
     login,
-    logout
+    logout,
+    getMe
 };
