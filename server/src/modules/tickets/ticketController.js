@@ -15,13 +15,19 @@ const createTicket = async (req, res, next) => {
             throw error;
         }
 
-        // Create ticket with authenticated user's information
+        // Automatically assign ticket to the creator if they are an agent
+        const assignedTo = req.user.role === "agent"
+            ? req.user._id
+            : null;
+
+        // Create ticket
         const ticket = await ticketService.createTicket({
             title,
             description,
             category,
             priority,
             createdBy: req.user._id,
+            assignedTo,
             organizationId: req.user.organizationId
         });
 
@@ -38,5 +44,5 @@ const createTicket = async (req, res, next) => {
 };
 
 module.exports = {
-    createTicket   // Export the createTicket controller function
-}; 
+    createTicket   //  // Export the createTicket controller function
+};
