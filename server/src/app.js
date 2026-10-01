@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-// Ou API endpoint is POST http://localhost:5000/api/tickets
+// Our API endpoint is POST http://localhost:5000/api/tickets
 app.use("/api/tickets", ticketRoutes);
 
 app.use(errorMiddleware);
