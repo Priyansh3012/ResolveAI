@@ -43,6 +43,41 @@ const createTicket = async (req, res, next) => {
     }
 };
 
+// Get tickets controller
+const getTickets = async (req, res, next) => {
+    try {
+        // Get filters from query parameters
+        const {
+            status,
+            category,
+            priority,
+            page,
+            limit
+        } = req.query;
+
+        // Fetch tickets based on user role and filters
+        const result = await ticketService.getTickets(
+            req.user,
+            {
+                status,
+                category,
+                priority,
+                page,
+                limit
+            }
+        );
+
+        res.status(200).json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        // Pass error to error middleware
+        next(error);
+    }
+};
+
 module.exports = {
-    createTicket   //  // Export the createTicket controller function
+    createTicket,
+    getTickets
 };

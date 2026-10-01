@@ -5,5 +5,6 @@ const protect = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.post("/", protect, ticketController.createTicket);
+router.get("/", protect, ticketController.getTickets);
 
 module.exports = router;
