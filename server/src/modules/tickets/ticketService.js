@@ -60,7 +60,7 @@ const getTickets = async (user, filters) => {
 
 // Get a single ticket by ID
 const getTicketById = async (id, user) => {
-    
+
   // Validate MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const error = new Error("Invalid ticket ID");
@@ -96,8 +96,56 @@ const getTicketById = async (id, user) => {
   return ticket;
 };
 
+
+// Update a ticket
+const updateTicket = async (id, user, data) => {
+    // Find ticket within user's organization
+    const ticket = await Ticket.findOne({
+        _id: id,
+        organizationId: user.organizationId
+    });
+
+    if (!ticket) {
+        const error = new Error("Ticket not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Agents can update only tickets assigned to them
+    if (
+        user.role === "agent" &&
+        (!ticket.assignedTo ||
+            ticket.assignedTo.toString() !== user._id.toString())
+    ) {
+        const error = new Error("Access denied");
+        error.statusCode = 403;
+        throw error;
+    }
+
+    // Update only allowed fields
+    const allowedFields = [
+        "title",
+        "description",
+        "category",
+        "priority",
+        "status",
+        "assignedTo"
+    ];
+
+    allowedFields.forEach((field) => {
+        if (data[field] !== undefined) {
+            ticket[field] = data[field];
+        }
+    });
+
+    await ticket.save();
+
+    return ticket;
+};
+
 module.exports = {
   createTicket,
   getTickets,
   getTicketById,
+  updateTicket
 };

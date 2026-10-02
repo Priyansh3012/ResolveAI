@@ -96,8 +96,30 @@ const getTicketById = async (req, res, next) => {
     }
 };
 
+// Update ticket controller
+const updateTicket = async (req, res, next) => {
+    try {
+        // Update ticket using URL ID and request body
+        const ticket = await ticketService.updateTicket(
+            req.params.id,
+            req.user,
+            req.body
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Ticket updated successfully",
+            ticket
+        });
+    } catch (error) {
+        // Pass error to error middleware
+        next(error);
+    }
+};
+
 module.exports = {
     createTicket,
     getTickets,
-    getTicketById
+    getTicketById,
+    updateTicket
 };
