@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post("/", protect, ticketController.createTicket);
 router.get("/", protect, ticketController.getTickets);
+router.get("/:id", protect, ticketController.getTicketById);
 
 module.exports = router;

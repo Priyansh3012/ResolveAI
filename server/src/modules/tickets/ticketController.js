@@ -77,7 +77,27 @@ const getTickets = async (req, res, next) => {
     }
 };
 
+// Get ticket by ID controller
+const getTicketById = async (req, res, next) => {
+    try {
+        // Get ticket ID from URL
+        const ticket = await ticketService.getTicketById(
+            req.params.id,
+            req.user
+        );
+
+        res.status(200).json({
+            success: true,
+            ticket
+        });
+    } catch (error) {
+        // Pass error to error middleware
+        next(error);
+    }
+};
+
 module.exports = {
     createTicket,
-    getTickets
+    getTickets,
+    getTicketById
 };
