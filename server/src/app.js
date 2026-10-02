@@ -4,6 +4,7 @@ const authRoutes = require("./routes/authRoutes");
 const errorMiddleware = require("./middleware/errorMiddleware");
 const cookieParser = require("cookie-parser");
 const ticketRoutes = require("./routes/ticketRoutes");
+const commentRoutes = require("./routes/commentRoutes");
 
 const app = express();
 
@@ -25,7 +26,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 // Our API endpoint is POST http://localhost:5000/api/tickets
 app.use("/api/tickets", ticketRoutes);
-
+app.use("/api/comments", commentRoutes);
 app.use(errorMiddleware);
 
 module.exports = app;
