@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const commentSchema = new mongoose.Schema(
@@ -5,29 +6,33 @@ const commentSchema = new mongoose.Schema(
         ticketId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Ticket",
-            required: true
+            required: true,
         },
 
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
         },
 
         organizationId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Organization",
-            required: true
+            required: true,
         },
 
         message: {
             type: String,
             required: true,
-            trim: true
-        }
+            trim: true,
+            maxlength: [
+                2000,
+                "Comment cannot exceed 2000 characters",
+            ],
+        },
     },
     {
-        timestamps: true
+        timestamps: true,
     }
 );
 

@@ -1,0 +1,29 @@
+services:
+  server:
+    build:
+      context: ./server
+    container_name: resolveai-server
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      REDIS_URL: redis://host.docker.internal:6379
+      CLIENT_URL: http://localhost:8080
+    ports:
+      - "5000:5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:5000/api
+    container_name: resolveai-client
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
