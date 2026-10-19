@@ -1,161 +1,200 @@
-# ResolveAI — AI-Powered IT Service Management
+# ResolveAI — IT Service Management Platform
 
-ResolveAI is a full-stack IT Service Management (ITSM) application built with the MERN stack. It helps teams manage support tickets, track ticket activity, collaborate through comments, and monitor support operations through a centralized dashboard. Gemini AI integration provides AI-powered assistance for supported workflows.
+ResolveAI is a full-stack IT Service Management (ITSM) application built with the MERN stack. It helps organizations manage support tickets, track ticket progress, assign work to agents, and monitor service activity through a centralized dashboard.
+
+## Live Demo
+
+- **Frontend:** https://resolve-ai-bice-delta.vercel.app
+- **Backend API:** https://resolveai-ydqn.onrender.com
+- **GitHub Repository:** https://github.com/Priyansh3012/ResolveAI
+
+*Note: The backend URL displays an API health message at its root. Application functionality is available through the frontend.*
 
 ## Features
 
-- **Authentication & Authorization:** JWT-based authentication using HttpOnly cookies and role-based access control.
-- **Ticket Management:** Create, view, update, assign, and manage support tickets.
-- **Dashboard Analytics:** View ticket statistics and operational summaries.
-- **Search & Filtering:** Filter tickets by status and priority, with pagination.
-- **Comments & Activity History:** Collaborate on tickets and track ticket-related activity.
-- **AI Integration:** Gemini API integration for supported AI-powered functionality.
-- **Caching & Rate Limiting:** Redis-based caching and API rate limiting.
-- **Containerization:** Dockerized frontend and backend with Docker Compose.
+- **Authentication:** User registration, login, logout, and JWT-based authentication using HttpOnly cookies.
+- **Role-Based Access Control:** Role-based permissions for administrators and agents.
+- **Ticket Management:** Create, view, filter, and manage support tickets.
+- **Ticket Assignment:** Assign tickets to support agents.
+- **Ticket Tracking:** Manage ticket status, priority, category, and activity history.
+- **Dashboard Analytics:** View ticket statistics, status distribution, and priority overview.
+- **Comments and Activity History:** Maintain communication and track ticket updates.
+- **AI Integration:** Gemini-powered AI functionality.
+- **Filtering and Pagination:** Find tickets using available filters and paginated results.
+- **Caching and Rate Limiting:** Redis-based caching and API rate limiting.
+- **Containerization:** Docker configuration for the frontend and backend services.
 
 ## Tech Stack
 
-| Layer | Technologies |
-|---|---|
-| Frontend | React, Vite, CSS |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas, Mongoose |
-| Authentication | JSON Web Tokens (JWT), HttpOnly cookies |
-| Caching | Redis |
-| AI | Google Gemini API |
-| Deployment & Containers | Docker, Docker Compose, Nginx |
+### Frontend
+- React
+- Vite
+- React Router
+- JavaScript
+- CSS
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB Atlas
+- Mongoose
+- JWT
+- bcryptjs
+- Redis
+- Google Gemini API
+
+### Deployment and Tools
+- Docker and Docker Compose
+- Vercel — frontend deployment
+- Render — backend deployment
+- Git and GitHub
+- Postman — API testing
 
 ## Architecture
 
 ```text
-React + Vite Frontend
-        |
-        | HTTP requests / JSON
-        v
-Express.js REST API
-        |
-        +------ MongoDB Atlas
-        |
-        +------ Redis
-        |
-        +------ Google Gemini API
+              User / Browser
+                     |
+                     v
+              React Frontend
+                 (Vercel)
+                     |
+             HTTPS API Requests
+             + Cookies / JWT
+                     |
+                     v
+             Express REST API
+                 (Render)
+                /    |     \
+               v     v      v
+          MongoDB   Redis   Gemini API
+           Atlas    Cache   AI Features
 ```
 
-## Getting Started
+The frontend communicates with the Express backend through REST APIs. MongoDB Atlas stores application data, Redis supports caching, and Gemini provides AI-related functionality.
+
+## Project Structure
+
+```text
+ResolveAI/
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── services/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── package.json
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── middleware/
+│   │   ├── modules/
+│   │   ├── routes/
+│   │   ├── app.js
+│   │   └── server.js
+│   ├── Dockerfile
+│   └── package.json
+├── docker-compose.yml
+└── README.md
+```
+
+## Run Locally
 
 ### Prerequisites
 
 - Node.js and npm
-- MongoDB Atlas account or a MongoDB instance
-- Redis server
-- Google Gemini API key for AI functionality
-- Docker Desktop (for containerized setup)
+- MongoDB Atlas account or a compatible MongoDB instance
+- Redis instance
+- Google Gemini API key
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Priyansh3012/ResolveAI.git
 cd ResolveAI
 ```
 
-### 2. Configure the Backend
+### 2. Configure the backend
 
-```bash
-cd server
-npm install
-```
-
-Create a `.env` file inside the `server` directory using `.env.example` as a reference.
-
-Configure the following variables:
+Create `server/.env` with the following variables:
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_random_jwt_secret
+JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=1d
 GEMINI_API_KEY=your_gemini_api_key
 REDIS_URL=redis://127.0.0.1:6379
-CLIENT_URL=http://localhost:5173
 ```
 
-Replace the placeholder values with your own configuration. Never commit real credentials to GitHub.
+Replace the example values with your own credentials. Ensure Redis is running and accessible at the configured URL.
 
-### 3. Configure the Frontend
+### 3. Configure the frontend
 
-Install the frontend dependencies:
-
-```bash
-cd ../client
-npm install
-```
-
-Create `client/.env` if required and configure the frontend API URL:
+Create `client/.env`:
 
 ```env
 VITE_API_URL=http://localhost:5000/api
 ```
 
-Only put public configuration in variables prefixed with `VITE_`. Never put secrets in frontend environment variables.
+This URL is for local development. For deployment, configure the frontend with the deployed backend API URL.
 
-### 4. Run the Application Locally
+### 4. Start the backend
 
-Start the backend in one terminal:
+Open a terminal in the project root:
 
 ```bash
 cd server
+npm install
 npm run dev
 ```
 
-Start the frontend in another terminal:
+The backend runs at `http://localhost:5000`.
+
+### 5. Start the frontend
+
+Open another terminal in the project root:
 
 ```bash
 cd client
+npm install
 npm run dev
 ```
 
-Open the frontend at `http://localhost:5173`.
+The frontend runs at `http://localhost:5173`.
 
-Ensure MongoDB and Redis are accessible and the environment variables are configured correctly.
+## Docker
 
-## Run with Docker
+The repository includes Dockerfiles for the frontend and backend and a Docker Compose configuration.
 
-Make sure Docker Desktop is running and your `server/.env` contains the required backend credentials.
+Ensure the Redis instance required by the Compose configuration is running and accessible on host port `6379`. Configure the backend environment variables before starting the containers.
 
-From the project root, run:
+From the project root:
 
 ```bash
 docker compose build
 docker compose up -d
-```
-
-Check the running containers:
-
-```bash
 docker compose ps
 ```
 
-View backend logs:
+The local Docker configuration exposes:
+
+- Frontend: `http://localhost:8080`
+- Backend: `http://localhost:5000`
+
+To inspect backend logs:
 
 ```bash
 docker compose logs --tail=100 server
 ```
 
-View frontend logs:
-
-```bash
-docker compose logs --tail=100 client
-```
-
-Open the Docker-hosted frontend at `http://localhost:8080`. The backend API is available at `http://localhost:5000`.
-
-Stop the containers with:
+To stop the containers:
 
 ```bash
 docker compose down
 ```
-
-The Docker Compose configuration uses MongoDB Atlas and connects to Redis using the configured Redis URL.
 
 ## Environment Variables
 
@@ -163,26 +202,46 @@ The Docker Compose configuration uses MongoDB Atlas and connects to Redis using 
 |---|---|
 | `PORT` | Backend server port |
 | `MONGO_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret used to sign JWTs |
-| `JWT_EXPIRES_IN` | JWT expiration duration |
+| `JWT_SECRET` | Secret used for JWT signing and verification |
+| `JWT_EXPIRES_IN` | JWT expiry duration |
 | `GEMINI_API_KEY` | Gemini API authentication |
 | `REDIS_URL` | Redis connection URL |
-| `CLIENT_URL` | Allowed frontend origin(s) for CORS |
+| `CLIENT_URL` | Allowed frontend origin for CORS |
 | `VITE_API_URL` | Frontend API base URL |
+
+**Security:** Never commit `.env` files, database credentials, JWT secrets, or API keys to GitHub. The frontend's `VITE_` variables are exposed to the browser and must not contain secrets.
+
+## Deployment
+
+- The frontend is deployed on Vercel.
+- The backend is deployed on Render.
+- MongoDB Atlas provides the database.
+- Redis provides caching support.
+
+The deployed frontend must use the correct backend API URL, and the backend CORS configuration must allow the deployed frontend origin. Cookie-based authentication must also be configured appropriately for cross-origin HTTPS requests.
+
+## Key Engineering Challenges
+
+### Cross-Origin Authentication After Deployment
+
+After deploying the frontend to Vercel and the backend to Render, the login endpoint returned HTTP 200, but protected endpoints returned HTTP 401.
+
+Chrome DevTools showed that the browser blocked the authentication cookie because it used `SameSite=Lax` in a cross-site response.
+
+**Resolution:** Updated the login and registration cookie configuration to use `SameSite=None` and `Secure=true`, redeployed the backend, and verified that protected API requests could authenticate successfully.
+
+This restored access to dashboard statistics and ticket data.
 
 ## Future Improvements
 
-- Automated testing for API endpoints and frontend workflows
-- CI/CD pipeline using GitHub Actions
-- Production deployment with HTTPS
-- Enhanced observability and error monitoring
+- Automated unit and integration tests
+- Improved monitoring and error reporting
+- Enhanced API documentation
+- Additional dashboard analytics
+- Expanded role-based permissions
 
 ## Author
 
 **Priyansh Agrawal**
 
-GitHub: [Priyansh3012](https://github.com/Priyansh3012)
-
----
-
-*Built as a full-stack project to explore ITSM workflows, REST API development, authentication, caching, AI integration, and containerization.*
+[GitHub](https://github.com/Priyansh3012)
